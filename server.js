@@ -41,3 +41,29 @@ net.createServer(function(c) { //'connection' listener
 }).listen(tivo_port, function() { //'listening' listener
 	console.log('Now listening on tivo port: '+tivo_port);
 });
+
+
+//
+// Begin discovery process/become discoverable
+//
+
+var uuid = require('node-uuid');
+var dgram = require('dgram');
+var discovery_message = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+uuid.v4()+"}\nservices=");
+var discovery_client = dgram.createSocket("udp4");
+discovery_client.send(discovery_message, 0, discovery_message.length, tivo_port, '', function(err, bytes) {
+	discovery_client.close();
+});
+
+var discovery_server = dgram.createSocket("udp4");
+
+discovery_server.on("message", function(msg, rinfo) {
+	console.log("discovery_server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+});
+
+discovery_server.on("listening", function () {
+	var address = discovery_server.address();
+	console.log("discovery_server listening " + address.address + ":" + address.port);
+});
+
+discovery_server.bind(tivo_port);
