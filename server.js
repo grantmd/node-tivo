@@ -3,6 +3,8 @@
  * Node-Tivo: An implementation of the Tivo protocol(s) in Node.js
  * By: Myles Grant <myles@mylesgrant.com>
  *
+ * Based on: http://tivopod.sourceforge.net/tivoconnect.pdf
+ *
 */
 
 //
