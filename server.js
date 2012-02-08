@@ -16,6 +16,10 @@ var tivo_port = 2190; // You probably don't want to change this
 
 var tcms = {}; // Other machines we've discovered
 
+var uuid = require('node-uuid');
+var our_beacon = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+uuid.v4()+"}\nservices=");
+
+
 //
 // Start web server
 //
@@ -119,9 +123,6 @@ discovery.on("listening", function(){
 	console.log("discovery listening " + address.address + ":" + address.port);
 });
 discovery.bind(tivo_port);
-
-var uuid = require('node-uuid');
-var discovery_message = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+uuid.v4()+"}\nservices=");
 discovery.setBroadcast(true);
 
 // Look for friends every 5s
@@ -133,7 +134,7 @@ var discovery_interval = setInterval(function(){
 }, 5*1000);
 
 function send_beacon(){
-	discovery.send(discovery_message, 0, discovery_message.length, 41234, "192.168.1.255", function(err, bytes){
+	discovery.send(our_beacon, 0, our_beacon.length, 41234, "192.168.1.255", function(err, bytes){
 		console.log('PING');
 		//discovery_client.close();
 	});
