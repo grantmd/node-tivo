@@ -53,7 +53,9 @@ net.createServer(function(c){ // 'connection' listener
 var dgram = require('dgram');
 var discovery_server = dgram.createSocket("udp4");
 discovery_server.on("message", function(msg, rinfo){
-	console.log("discovery_server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+	if (rinfo.address != '127.0.0.1'){
+		console.log("discovery_server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+	}
 });
 discovery_server.on("listening", function(){
 	var address = discovery_server.address();
