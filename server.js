@@ -7,17 +7,33 @@
  *
 */
 
+
 //
-// Configuration options
+// Read/create config
 //
 
-var web_port = 8080; // Start a web server on this port
-var tivo_port = 2190; // You probably don't want to change this
+var fs = require('fs');
+try{
+	var config = JSON.parse(fs.readFileSync('./config.json'));
+}
+catch(e){
+	console.log('Creating config file...');
 
-var tcms = {}; // Other machines we've discovered
+	var uuid = require('node-uuid');
+	var config = {
+		web_port: 8080, // Start a web server on this port
+		tivo_port: 2190, // You probably don't want to change this
 
-var uuid = require('node-uuid');
-var our_beacon = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+uuid.v4()+"}\nservices=");
+		tcms: {}, // Other machines we've discovered
+
+		uuid: uuid.v4()
+	};
+
+	save_config();
+}
+
+console.log("We are: "+config.uuid);
+var our_beacon = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+config.uuid+"}\nservices=");
 
 
 //
@@ -48,8 +64,8 @@ http.createServer(function(req, res){
 	res.write('<div class="row"><div class="span12">');
 	res.write('<h3>I have seen the following TiVo Connect Machines:</h3>');
 	res.write('<table class="table table-condensed table-striped"><thead><tr><th>identity</th><th>machine</th><th>platform</th><th>services</th><th>address</th><th>last seen</th></tr></thead><tbody>');
-	for (var i in tcms){
-		var tcm = tcms[i];
+	for (var i in config.tcms){
+		var tcm = config.tcms[i];
 		var d = new Date(tcm.last_seen);
 
 		res.write("<tr>");
@@ -66,8 +82,8 @@ http.createServer(function(req, res){
 
 	res.write('</div>');
 	res.end("</body></html>");
-}).listen(web_port, function(){ // 'listening' listener
-	console.log('Now listening on web port: '+web_port);
+}).listen(config.web_port, function(){ // 'listening' listener
+	console.log('Now listening on web port: '+config.web_port);
 });
 
 
@@ -83,8 +99,8 @@ net.createServer(function(c){ // 'connection' listener
 	});
 	c.write('hello\r\n');
 	c.pipe(c);
-}).listen(tivo_port, function(){ // 'listening' listener
-	console.log('Now listening on tivo port: '+tivo_port);
+}).listen(config.tivo_port, function(){ // 'listening' listener
+	console.log('Now listening on tivo port: '+config.tivo_port);
 });
 
 
@@ -107,22 +123,25 @@ discovery.on("message", function(msg, rinfo){
 
 	// test validity
 	if (beacon.tivoconnect){
-		if (!tcms[beacon.identity]){
-			console.log("SAY HELLO TO "+beacon.machine+" at "+rinfo.address+":"+rinfo.port);
-		}
-
 		beacon.last_seen = new Date().getTime();
 		beacon.address = rinfo.address;
 		beacon.port = rinfo.port;
 
-		tcms[beacon.identity] = beacon;
+		if (!config.tcms[beacon.identity]){
+			console.log("SAY HELLO TO "+beacon.machine+" at "+rinfo.address+":"+rinfo.port);
+			config.tcms[beacon.identity] = beacon;
+			save_config();
+		}
+		else{
+			config.tcms[beacon.identity] = beacon;
+		}
 	}
 });
 discovery.on("listening", function(){
 	var address = discovery.address();
 	console.log("discovery listening " + address.address + ":" + address.port);
 });
-discovery.bind(tivo_port);
+discovery.bind(config.tivo_port);
 discovery.setBroadcast(true);
 
 // Look for friends every 5s
@@ -148,4 +167,11 @@ function send_beacon(){
 	}
 
 	discovery_attempts++;
+}
+
+function save_config(){
+	fs.writeFile('./config.json', JSON.stringify(config), function(err){
+		if (err) throw err;
+		console.log('Config saved!');
+	});
 }
