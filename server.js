@@ -134,7 +134,7 @@ var discovery_interval = setInterval(function(){
 }, 5*1000);
 
 function send_beacon(){
-	discovery.send(our_beacon, 0, our_beacon.length, 41234, "192.168.1.255", function(err, bytes){
+	discovery.send(our_beacon, 0, our_beacon.length, 2190, "255.255.255.255", function(err, bytes){
 		console.log('PING');
 		//discovery_client.close();
 	});
