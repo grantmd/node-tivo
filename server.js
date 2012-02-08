@@ -89,7 +89,13 @@ discovery.setBroadcast(true);
 
 // Look for friends every 5s
 var discovery_attempts = 0;
+send_beacon();
+
 var discovery_interval = setInterval(function(){
+	send_beacon();
+}, 5*1000);
+
+function send_beacon(){
 	discovery.send(discovery_message, 0, discovery_message.length, 41234, "192.168.1.255", function(err, bytes){
 		console.log('PING');
 		//discovery_client.close();
@@ -97,9 +103,11 @@ var discovery_interval = setInterval(function(){
 
 	if (discovery_attempts == 6){
 		// Switch to every minute
-		//clearInterval(discovery_interval);
-		//discovery_interval = setInterval('look_for_friends', 60*1000);
+		clearInterval(discovery_interval);
+		discovery_interval = setInterval(function(){
+			send_beacon();
+		}, 60*1000);
 	}
 
 	discovery_attempts++;
-}, 5*1000);
+}
