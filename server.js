@@ -23,8 +23,45 @@ var tcms = {}; // Other machines we've discovered
 var http = require('http');
 http.createServer(function(req, res){
 	console.log('Request received for '+req.url+' from '+req.connection.remoteAddress);
-	res.writeHead(200, {'Content-Type': 'text/plain'});
-	res.end("Hello. Node-Tivo is listening.");
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	res.write("<html><head><title>Node-Tivo</title>");
+	res.write('<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">');
+    res.write('<style>');
+    res.write('  body {');
+    res.write('    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */');
+    res.write('  }');
+    res.write('</style>');
+    res.write('<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">');
+	res.write("</head><body>");
+
+	res.write('<div class="container">');
+	res.write('<div class="row"><div class="span12">');
+	res.write("<h1>Hello. Node-Tivo is listening.</h1>");
+	res.write('</div></div>');
+
+	res.write('<hr>');
+
+	res.write('<div class="row"><div class="span12">');
+	res.write('<h3>I have seen the following TiVo Connect Machines:</h3>');
+	res.write('<table class="table table-condensed table-striped"><thead><tr><th>identity</th><th>machine</th><th>platform</th><th>services</th><th>address</th><th>last seen</th></tr></thead><tbody>');
+	for (var i in tcms){
+		var tcm = tcms[i];
+		var d = new Date(tcm.last_seen);
+
+		res.write("<tr>");
+		res.write("<td>"+tcm.identity+"</td>");
+		res.write("<td>"+tcm.machine+"</td>");
+		res.write("<td>"+tcm.platform+"</td>");
+		res.write("<td>"+tcm.services+"</td>");
+		res.write("<td>"+tcm.address+"</td>");
+		res.write("<td>"+d.toString()+"</td>");
+		res.write("</tr>");
+	}
+	res.write("</tbody></table>");
+	res.write('</div></div>');
+
+	res.write('</div>');
+	res.end("</body></html>");
 }).listen(web_port, function(){ // 'listening' listener
 	console.log('Now listening on web port: '+web_port);
 });
