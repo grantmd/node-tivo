@@ -5,7 +5,7 @@ Node-Tivo is, since I am not very creative at naming things, an implementation o
 
 Instructions
 ------------
-# Install Node.js
-# Install node-uuid (`npm install node-uuid`)
-# Run `node server.js`
-# Visit http://localhost:8080/ to configure
+* Install Node.js
+* Install node-uuid (`npm install node-uuid`)
+* Run `node server.js`
+* Visit http://localhost:8080/ to configure
