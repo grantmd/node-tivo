@@ -64,7 +64,20 @@ discovery_server.bind(tivo_port);
 var uuid = require('node-uuid');
 var discovery_message = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+uuid.v4()+"}\nservices=");
 var discovery_client = dgram.createSocket("udp4");
-discovery_client.send(discovery_message, 0, discovery_message.length, tivo_port, '', function(err, bytes){
-	discovery_client.close();
-});
 
+// Look for friends every 5s
+var discovery_attempts = 0;
+var discovery_interval = setInterval(function(){
+	discovery_client.send(discovery_message, 0, discovery_message.length, tivo_port, '', function(err, bytes){
+		console.log('PING');
+		//discovery_client.close();
+	});
+
+	if (discovery_attempts == 6){
+		// Switch to every minute
+		//clearInterval(discovery_interval);
+		//discovery_interval = setInterval('look_for_friends', 60*1000);
+	}
+
+	discovery_attempts++;
+}, 5*1000);
