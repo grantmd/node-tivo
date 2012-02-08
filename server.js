@@ -14,6 +14,7 @@
 var web_port = 8080; // Start a web server on this port
 var tivo_port = 2190; // You probably don't want to change this
 
+var tcms = {}; // Other machines we've discovered
 
 //
 // Start web server
@@ -54,7 +55,28 @@ var dgram = require('dgram');
 var discovery_server = dgram.createSocket("udp4");
 discovery_server.on("message", function(msg, rinfo){
 	if (rinfo.address != '127.0.0.1'){
-		console.log("discovery_server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+		//console.log("discovery_server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
+
+		// normalize
+		var beacon_raw = msg.toString().split("\n");
+		var beacon = {};
+		for (var i in beacon_raw){
+			var parts = beacon_raw[i].split('=', 2);
+			beacon[parts[0].toLowerCase()] = parts[1];
+		}
+
+		// test validity
+		if (beacon.tivoconnect){
+			if (!tcms[beacon.identity]){
+				console.log("SAY HELLO TO "+beacon.machine+" at "+rinfo.address+":"+rinfo.port);
+			}
+
+			beacon.last_seen = new Date().getTime();
+			beacon.address = rinfo.address;
+			beacon.port = rinfo.port;
+
+			tcms[beacon.identity] = beacon;
+		}
 	}
 });
 discovery_server.on("listening", function(){
