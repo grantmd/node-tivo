@@ -57,7 +57,7 @@ http.createServer(function(req, res){
 		res.write("<td>"+tcm.machine+"</td>");
 		res.write("<td>"+tcm.platform+"</td>");
 		res.write("<td>"+tcm.services+"</td>");
-		res.write("<td>"+tcm.address+"</td>");
+		res.write("<td>"+tcm.address+":"+tcm.port+"</td>");
 		res.write("<td>"+d.toString()+"</td>");
 		res.write("</tr>");
 	}
