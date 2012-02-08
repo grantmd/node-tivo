@@ -41,25 +41,12 @@ var our_beacon = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.j
 //
 
 var http = require('http');
+var header = fs.readFileSync('./templates/inc_head.html');
+var footer = fs.readFileSync('./templates/inc_foot.html');
 http.createServer(function(req, res){
 	console.log('Request received for '+req.url+' from '+req.connection.remoteAddress);
 	res.writeHead(200, {'Content-Type': 'text/html'});
-	res.write("<html><head><title>Node-Tivo</title>");
-	res.write('<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">');
-    res.write('<style>');
-    res.write('  body {');
-    res.write('    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */');
-    res.write('  }');
-    res.write('</style>');
-    res.write('<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">');
-	res.write("</head><body>");
-
-	res.write('<div class="container">');
-	res.write('<div class="row"><div class="span12">');
-	res.write("<h1>Hello. Node-Tivo is listening.</h1>");
-	res.write('</div></div>');
-
-	res.write('<hr>');
+	res.write(header);
 
 	res.write('<div class="row"><div class="span12">');
 	res.write('<h3>I have seen the following TiVo Connect Machines:</h3>');
@@ -80,8 +67,7 @@ http.createServer(function(req, res){
 	res.write("</tbody></table>");
 	res.write('</div></div>');
 
-	res.write('</div>');
-	res.end("</body></html>");
+	res.end(footer);
 }).listen(config.web_port, function(){ // 'listening' listener
 	console.log('Now listening on web port: '+config.web_port);
 });
