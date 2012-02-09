@@ -52,8 +52,86 @@ var footer = fs.readFileSync('./templates/inc_foot.html');
 http.createServer(function(req, res){
 	console.log('Request received for '+req.url+' from '+req.connection.remoteAddress);
 
-	var parsed_url = url.parse(req.url);
+	var parsed_url = url.parse(req.url, true);
+	var paths = parsed_url.pathname.split('/');
+
+	var session = parsed_url.query.Session ? parsed_url.query.Session : '';
 	if (parsed_url.pathname == '/TiVoConnect'){
+		// Run some command
+		var rsp = '';
+		var code = 200;
+
+		var format = parsed_url.query.Format ? parsed_url.query.Format : 'text/xml';
+		switch (parsed_url.query.Command){
+			case 'QueryContainer':
+				// Process options
+				var container = parsed_url.query.Container ? parsed_url.query.Container : '/';
+				var recurse = parsed_url.query.Recurse == 'Yes' ? true : false;
+				var sorting = parsed_url.query.SortOrder ? parsed_url.query.SortOrder.split(',') : [];
+				var maxItems = parsed_url.query.ItemCount ? parsed_url.query.ItemCount : 0;
+				var anchor = parsed_url.query.AnchorItem ? parsed_url.query.AnchorItem : null;
+				var anchorOffset = parsed_url.query.AnchorOffset ? parsed_url.query.AnchorOffset : null;
+				var filterMime = parsed_url.query.Filter ? parsed_url.query.Filter.split(',') : [];
+
+				// Build response
+				var data = {
+					start: 0,
+					title: our_beacon.machine,
+					type: 'x-container/tivo-server',
+					format: 'x-container/folder',
+					items: []
+				};
+
+				console.log("Building container for: "+container);
+				if (container == '/'){
+					data.items.push({
+						title: 'Videos',
+						type: 'x-container/tivo-videos',
+						format: 'x-container/folder',
+						path: '/Videos'
+					});
+				}
+				else{
+					
+				}
+
+				rsp = build_querycontainer_xml(data);
+				break;
+			case 'QueryServer': // The spec says this does nothing
+				rsp = "<TiVoServer>\n<Version>1</Version>\n<InternalName>Node-Tivo</InternalName>\n<InternalVersion>ALL</InternalVersion>\n<Organization>https://github.com/grantmd</Organization>\n<Comment>Back To The Future is a good movie.</Comment>\n</TiVoServer>";
+				break;
+			case 'ResetServer': // "Reset" internal state. But the docs say this isn't used.
+				break;
+			case 'QueryItem': // Docs say this isn't used
+				var itemUrl = parsed_url.query.Url ? parsed_url.query.Url : null;
+				break;
+			case 'QueryFormats': // Docs say this isn't used
+				var sourceFormat = parsed_url.query.SourceFormat ? parsed_url.query.SourceFormat : null;
+				break;
+			default:
+				code = 404;
+				rsp = '404!';
+				break;
+		}
+		res.writeHead(code, {'Content-Type': format});
+		res.end(rsp);
+	}
+	else if (paths[0] == 'TiVoConnect'){
+		// Serve a "document" aka media
+		var document = parsed_url.pathname.replace('/TiVoConnect', '');
+
+		// Options
+		var format = parsed_url.query.Format ? parsed_url.query.Format : null;
+
+		var width = parsed_url.query.Width ? parsed_url.query.Width : null;
+		var rotation = parsed_url.query.Rotation ? parsed_url.query.Rotation : null;
+		var pixelShape = parsed_url.query.PixelShape ? parsed_url.query.PixelShape.split(':') : [1,1];
+
+		var seek = parsed_url.query.Seek ? parsed_url.query.Seek : null;
+		var duration = parsed_url.query.Duration ? parsed_url.query.Duration : null;
+
+		var code = 200;
+		res.writeHead(code, {'Content-Type': format});
 		res.end();
 	}
 	else if (parsed_url.pathname == '/'){
@@ -83,7 +161,7 @@ http.createServer(function(req, res){
 		res.end(footer);
 	}
 	else{
-		res.writeHead(200, {'Content-Type': 'text/plain'});
+		res.writeHead(404, {'Content-Type': 'text/plain'});
 		res.end("404!");
 	}
 }).listen(config.web_port, function(){ // 'listening' listener
@@ -177,4 +255,40 @@ function save_config(){
 		if (err) throw err;
 		console.log('Config saved!');
 	});
+}
+
+function build_querycontainer_xml(data){
+	var rsp = "<TiVoContainer>\n";
+
+	rsp += "\t<ItemStart>"+data.start+"</ItemStart>\n";
+	rsp += "\t<ItemCount>"+data.items.length+"</ItemCount>\n";
+
+	rsp += "\t<Details>\n";
+	rsp += "\t\t<Title>"+data.title+"</Title>\n";
+	rsp += "\t\t<ContentType>"+data.type+"</ContentType>\n";
+	rsp += "\t\t<SourceFormat>"+data.format+"</SourceFormat>\n";
+	rsp += "\t\t<TotalItems>"+data.items.length+"</TotalItems>\n";
+	rsp += "\t</Details>\n";
+
+	for (var i in data.items){
+		var it = data.items[i];
+
+		rsp += "\t<Item>\n";
+		rsp += "\t\t<Details>\n";
+		rsp += "\t\t\t<Title>"+it.title+"</Title>\n";
+		rsp += "\t\t\t<ContentType>"+it.type+"</ContentType>\n";
+		rsp += "\t\t\t<SourceFormat>"+it.format+"</SourceFormat>\n";
+		rsp += "\t\t</Details>\n";
+
+		rsp += "\t\t<Links>\n";
+		rsp += "\t\t\t<Content>\n";
+		rsp += "\t\t\t\t<Url>/TiVoConnect?Command=QueryContainer&amp;Container="+it.path+"</Url>\n";
+		rsp += "\t\t\t</Content>\n";
+		rsp += "\t\t</Links>\n";
+		rsp += "\t</Item>\n";
+	}
+
+	rsp += "</TiVoContainer>";
+
+	return rsp;
 }
