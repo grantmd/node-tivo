@@ -37,6 +37,7 @@ var Beacon = require('./lib/beacon.js');
 console.log("We are: "+config.uuid);
 var our_beacon = new Beacon();
 our_beacon.identity = config.uuid;
+our_beacon.addService('TiVoMediaServer:'+config.web_port+'/http');
 //console.log('Our beacon: %s', our_beacon);
 
 
