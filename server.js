@@ -36,8 +36,8 @@ var Beacon = require('./lib/beacon.js');
 
 console.log("We are: "+config.uuid);
 var our_beacon = new Beacon();
-our_beacon.parts.identity = config.uuid;
-
+our_beacon.identity = config.uuid;
+//console.log('Our beacon: %s', our_beacon);
 
 //
 // Start web server
@@ -103,12 +103,7 @@ discovery.on("message", function(msg, rinfo){
 	//console.log("discovery got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 
 	// normalize
-	var beacon_raw = msg.toString().split("\n");
-	var beacon = {};
-	for (var i in beacon_raw){
-		var parts = beacon_raw[i].split('=', 2);
-		beacon[parts[0].toLowerCase()] = parts[1];
-	}
+	var beacon = new Beacon(msg.toString());
 
 	// test validity
 	if (beacon.tivoconnect){
@@ -142,8 +137,11 @@ var discovery_interval = setInterval(function(){
 }, 5*1000);
 
 function send_beacon(){
-	var buffer = new Buffer(our_beacon);
+	var buffer = our_beacon.toBuffer();
+	//console.log(buffer.toString());
+	//console.log(buffer.length);
 	discovery.send(buffer, 0, buffer.length, 2190, "255.255.255.255", function(err, bytes){
+		if (err) throw err;
 		console.log('PING');
 		//discovery_client.close();
 	});
