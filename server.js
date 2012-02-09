@@ -46,33 +46,46 @@ our_beacon.addService('TiVoMediaServer:'+config.web_port+'/http');
 //
 
 var http = require('http');
+var url = require('url');
 var header = fs.readFileSync('./templates/inc_head.html');
 var footer = fs.readFileSync('./templates/inc_foot.html');
 http.createServer(function(req, res){
 	console.log('Request received for '+req.url+' from '+req.connection.remoteAddress);
-	res.writeHead(200, {'Content-Type': 'text/html'});
-	res.write(header);
 
-	res.write('<div class="row"><div class="span12">');
-	res.write('<h3>I have seen the following TiVo Connect Machines:</h3>');
-	res.write('<table class="table table-condensed table-striped"><thead><tr><th>identity</th><th>machine</th><th>platform</th><th>services</th><th>address</th><th>last seen</th></tr></thead><tbody>');
-	for (var i in config.tcms){
-		var tcm = config.tcms[i];
-		var d = new Date(tcm.last_seen);
-
-		res.write("<tr>");
-		res.write("<td>"+tcm.identity+"</td>");
-		res.write("<td>"+tcm.machine+"</td>");
-		res.write("<td>"+tcm.platform+"</td>");
-		res.write("<td>"+tcm.services+"</td>");
-		res.write("<td>"+tcm.address+":"+tcm.port+"</td>");
-		res.write("<td>"+d.toString()+"</td>");
-		res.write("</tr>");
+	var parsed_url = url.parse(req.url);
+	if (parsed_url.pathname == '/TiVoConnect'){
+		res.end();
 	}
-	res.write("</tbody></table>");
-	res.write('</div></div>');
+	else if (parsed_url.pathname == '/'){
 
-	res.end(footer);
+		res.writeHead(200, {'Content-Type': 'text/html'});
+		res.write(header);
+
+		res.write('<div class="row"><div class="span12">');
+		res.write('<h3>I have seen the following TiVo Connect Machines:</h3>');
+		res.write('<table class="table table-condensed table-striped"><thead><tr><th>identity</th><th>machine</th><th>platform</th><th>services</th><th>address</th><th>last seen</th></tr></thead><tbody>');
+		for (var i in config.tcms){
+			var tcm = config.tcms[i];
+			var d = new Date(tcm.last_seen);
+
+			res.write("<tr>");
+			res.write("<td>"+tcm.identity+"</td>");
+			res.write("<td>"+tcm.machine+"</td>");
+			res.write("<td>"+tcm.platform+"</td>");
+			res.write("<td>"+tcm.services+"</td>");
+			res.write("<td>"+tcm.address+":"+tcm.port+"</td>");
+			res.write("<td>"+d.toString()+"</td>");
+			res.write("</tr>");
+		}
+		res.write("</tbody></table>");
+		res.write('</div></div>');
+
+		res.end(footer);
+	}
+	else{
+		res.writeHead(200, {'Content-Type': 'text/plain'});
+		res.end("404!");
+	}
 }).listen(config.web_port, function(){ // 'listening' listener
 	console.log('Now listening on web port: '+config.web_port);
 });
