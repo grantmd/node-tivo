@@ -39,6 +39,7 @@ var our_beacon = new Beacon();
 our_beacon.identity = config.uuid;
 //console.log('Our beacon: %s', our_beacon);
 
+
 //
 // Start web server
 //
@@ -103,7 +104,7 @@ discovery.on("message", function(msg, rinfo){
 	//console.log("discovery got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 
 	// normalize
-	var beacon = new Beacon(msg.toString());
+	var beacon = new Beacon(msg);
 
 	// test validity
 	if (beacon.tivoconnect){
