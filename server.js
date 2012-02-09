@@ -32,8 +32,11 @@ catch(e){
 	save_config();
 }
 
+var Beacon = require('./lib/beacon.js');
+
 console.log("We are: "+config.uuid);
-var our_beacon = new Buffer("tivoconnect=1\nmethod=broadcast\nplatform=pc/node.js\nmachine=A node.js server\nidentity={"+config.uuid+"}\nservices=");
+var our_beacon = new Beacon();
+our_beacon.parts.identity = config.uuid;
 
 
 //
@@ -139,7 +142,8 @@ var discovery_interval = setInterval(function(){
 }, 5*1000);
 
 function send_beacon(){
-	discovery.send(our_beacon, 0, our_beacon.length, 2190, "255.255.255.255", function(err, bytes){
+	var buffer = new Buffer(our_beacon);
+	discovery.send(buffer, 0, buffer.length, 2190, "255.255.255.255", function(err, bytes){
 		console.log('PING');
 		//discovery_client.close();
 	});
